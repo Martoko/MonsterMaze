@@ -9,6 +9,8 @@ class Creature < GameObject
     @health = @max_health
     @healthbar = HealthBar.new(self)
     @dmg = 10
+    @turns_since_dmg = 0
+    @passive_heal_val = 5
   end
 
   def try_move(new_x, new_y)
@@ -24,9 +26,30 @@ class Creature < GameObject
 
       @x = old_x
       @y = old_y
-      did_collide_with(obj)
-      break
+
+      if obj.is_a? Creature
+        did_attack(obj)
+        return true
+      else
+        did_collide_with(obj)
+        return false
+      end
     end
+
+    @turns_since_dmg += 1
+    true
+  end
+
+  def did_collide_with(obj)
+    # Called when a collision occurs
+  end
+
+  def did_attack(obj)
+    # Called when a collision occurs with another Creature
+  end
+
+  def passive_heal
+    heal(@passive_heal_val) if @turns_since_dmg > 1
   end
 
   def heal(val)
@@ -35,6 +58,7 @@ class Creature < GameObject
   end
 
   def take_dmg(dmg)
+    @turns_since_dmg = 0
     @health -= dmg
     @@objs << FloatingText.new(dmg.to_s, @x + @w / 2, @y)
 
@@ -61,22 +85,12 @@ class Player < Creature
     @image = Gosu::Image.new('img/visored-helm.png')
   end
 
-  def try_move(new_x, new_y)
-    super(new_x, new_y)
-    did_move = @x == new_x && @y == new_y
-    if did_move
-      heal(rand(5))
-    end
+  def did_collide_with(_obj)
+    puts 'player collided'
   end
 
-  def did_collide_with(obj)
-    puts 'player collided'
-    if obj.is_a? Enemy
-      obj.take_dmg(rand(dmg)) if obj.is_a? Enemy
-      if obj.health > 0
-        self.take_dmg(rand(obj.dmg))
-      end
-    end
+  def did_attack(obj)
+    obj.take_dmg(rand(dmg)) if obj.is_a? Enemy
   end
 end
 
@@ -101,17 +115,20 @@ class Enemy < Creature
     puts 'enemy collided'
   end
 
+  def did_attack(obj)
+    obj.take_dmg(rand(dmg)) if obj.is_a? Player
+  end
+
   def try_move(new_x, new_y)
     if @stamina < 1
       @stamina = @max_stamina
       return
     end
 
-    super(new_x, new_y)
-    did_move = @x == new_x && @y == new_y
-    if did_move
-      @stamina -= 1
-      heal(rand(5))
-    end
+    did_move = super(new_x, new_y)
+
+    @stamina -= 1 if did_move
+
+    did_move
   end
 end

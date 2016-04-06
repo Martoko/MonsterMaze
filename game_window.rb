@@ -3,6 +3,7 @@ require_relative 'game_object'
 require_relative 'creature'
 require_relative 'background'
 require_relative 'floating_text'
+require_relative 'endgame_text'
 require 'pry'
 
 # IDEA: Sight/visbility like in ADOM
@@ -115,6 +116,8 @@ class GameWindow < Gosu::Window
     @tiles = gen_tiles
     @objs = [bg, @player] + @tiles + gen_enemies
     GameObject.set_objects @objs
+
+    @paused = false
   end
 
   def needs_cursor?
@@ -124,26 +127,50 @@ class GameWindow < Gosu::Window
   def button_down(id)
     close if id == Gosu::KbEscape
 
+    if @paused
+      initialize
+      return
+    end
+
     move_player(0, 1) if id == Gosu::KbDown
     move_player(0, -1) if id == Gosu::KbUp
     move_player(1, 0) if id == Gosu::KbRight
     move_player(-1, 0) if id == Gosu::KbLeft
-    move_enemies if id == Gosu::KbSpace
-    binding.pry if id == Gosu::KbSpace # DEBUG ENTRY
+    move_player(0, 0) if id == Gosu::KbSpace
+  end
+
+  def move_player(ver_sq, hor_sq)
+    new_x = @player.x + ver_sq * (@player.w + 5)
+    new_y = @player.y + hor_sq * (@player.h + 5)
+
+    player_did_move = @player.try_move(new_x, new_y)
+
+    if player_did_move
+      move_enemies
+      @objs.each do |obj|
+        obj.passive_heal if obj.respond_to? :passive_heal
+      end
+    end
+
+    if @player.health <= 0
+      @objs << EndgameText.new(self, :lose)
+      @paused = true
+    end
+
+    won = true
+    @objs.each do |obj|
+      won = false if obj.is_a? Enemy
+    end
+    if won
+      @objs << EndgameText.new(self, :win)
+      @paused = true
+    end
+
   end
 
   def move_enemies
     enemies = @objs.find_all { |obj| obj.is_a? Enemy }
     enemies.each { |enemy| move_enemy(enemy) }
-
-    if enemies.count < 3
-      # air_tiles = @tiles.find_all { |tile|
-      #   tile.type == :air
-      # }
-      # x = air_tiles[0].x
-      # y = air_tiles[0].y
-      # @objs << Enemy.new(5 + x * (64 + 5), 5 + y * (64 + 5))
-    end
   end
 
   def move_enemy(enemy)
@@ -151,8 +178,6 @@ class GameWindow < Gosu::Window
     movement_path = a_star([enemy.x, enemy.y], [@player.x, @player.y])
     return unless movement_path # No solution found
     return if movement_path.length > 7 # not close enough to 'spot' the player
-    return if rand(10) < 1
-    # return unless movement_path # Next if enemy.pos == player.pos
     new_x = movement_path[1][0]
     new_y = movement_path[1][1]
     enemy.try_move(new_x, new_y)
@@ -221,16 +246,6 @@ class GameWindow < Gosu::Window
       end
     end
     neighbours
-  end
-
-  def move_player(ver_sq, hor_sq)
-    new_x = @player.x + ver_sq * (@player.w + 5)
-    new_y = @player.y + hor_sq * (@player.h + 5)
-
-    @player.try_move(new_x, new_y)
-    player_did_move = @player.x == new_x && @player.y == new_y
-
-    move_enemies if player_did_move
   end
 
   def update

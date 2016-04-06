@@ -25,7 +25,10 @@ class HealthBar
     bg_w = @w - overlay_w
     bg_x = @parent.x + overlay_w
 
-    Gosu.draw_rect(@parent.x + @parent.w / 2 - @w / 2, @parent.y + @rel_y, overlay_w, @h, @overlay_color, z)
+    # Overlay (green)
+    Gosu.draw_rect(@parent.x + @parent.w / 2 - @w / 2, @parent.y + @rel_y,
+                   overlay_w, @h, @overlay_color, z)
+    # Background (red)
     Gosu.draw_rect(bg_x, @parent.y + @rel_y, bg_w, @h, @bg_color, z)
   end
 end
