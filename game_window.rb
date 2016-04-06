@@ -4,6 +4,7 @@ require_relative 'creature'
 require_relative 'background'
 require_relative 'floating_text'
 require_relative 'endgame_text'
+require_relative 'instructions_overlay'
 require 'pry'
 
 # IDEA: Sight/visbility like in ADOM
@@ -114,10 +115,11 @@ class GameWindow < Gosu::Window
     @player = gen_player
     bg = Background.new(@w, @h)
     @tiles = gen_tiles
-    @objs = [bg, @player] + @tiles + gen_enemies
+    @instruct_overlay = InstructionsOverlay.new(self)
+    @objs = [bg, @player, @instruct_overlay] + @tiles + gen_enemies
     GameObject.set_objects @objs
 
-    @paused = false
+    @paused = true
   end
 
   def needs_cursor?
@@ -128,7 +130,9 @@ class GameWindow < Gosu::Window
     close if id == Gosu::KbEscape
 
     if @paused
-      initialize
+      initialize unless @objs.include? @instruct_overlay
+      @objs.delete @instruct_overlay if @objs.include? @instruct_overlay
+      @paused = false
       return
     end
 

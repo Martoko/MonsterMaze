@@ -85,10 +85,6 @@ class Player < Creature
     @image = Gosu::Image.new('img/visored-helm.png')
   end
 
-  def did_collide_with(_obj)
-    puts 'player collided'
-  end
-
   def did_attack(obj)
     obj.take_dmg(rand(dmg)) if obj.is_a? Enemy
   end
@@ -109,10 +105,6 @@ class Enemy < Creature
     @stamina = @max_stamina
     @solid = true
     @image = Gosu::Image.new('img/orc-head.png')
-  end
-
-  def did_collide_with(_obj)
-    puts 'enemy collided'
   end
 
   def did_attack(obj)
