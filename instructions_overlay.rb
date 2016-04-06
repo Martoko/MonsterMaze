@@ -20,7 +20,7 @@ class InstructionsOverlay
     fnt_color = Gosu::Color.new(255, 240, 240, 240)
     scale_x = 1
     scale_y = 1
-    relative_offset = 0.5 # Centers the text
+    relative_offset = 0.5 # Centers the text relative to its x and y values
     @text.each.with_index do |line, i|
       @font.draw_rel(line, @w / 2, @h / 2 + 60 - i * 60, z,
                      relative_offset, relative_offset, scale_x, scale_y, fnt_color)
