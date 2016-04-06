@@ -13,8 +13,4 @@ class GameObject
   def overlaps?(other)
     @x == other.x && @y == other.y
   end
-
-  def did_collide_with(obj)
-    # Called when a collision occurs
-  end
 end
