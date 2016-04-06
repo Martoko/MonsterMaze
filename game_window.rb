@@ -1,5 +1,6 @@
 require 'gosu'
 require_relative 'game_object'
+require_relative 'creature'
 require_relative 'background'
 require_relative 'floating_text'
 require 'pry'
