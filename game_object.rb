@@ -18,8 +18,8 @@ class GameObject
   end
 
   def try_move(new_x, new_y)
-    old_x = self.x
-    old_y = self.y
+    old_x = x
+    old_y = y
     @x = new_x
     @y = new_y
     @@objs.each do |obj|
@@ -36,13 +36,13 @@ class GameObject
   end
 end
 
+# Represents the player and enemies
 class Creature < GameObject
   def take_dmg(dmg)
     @health -= dmg
-    @@objs << FloatingText.new("#{dmg}", @x + @w/2, @y)
-    if @health <= 0
-      @@objs.delete(self)
-    end
+    @@objs << FloatingText.new(dmg.to_s, @x + @w / 2, @y)
+
+    @@objs.delete(self) if @health <= 0
   end
 end
 
@@ -59,10 +59,8 @@ class Player < Creature
   end
 
   def did_collide_with(obj)
-    puts "player collided"
-    if obj.is_a? Enemy
-      obj.take_dmg 50
-    end
+    puts 'player collided'
+    obj.take_dmg 50 if obj.is_a? Enemy
   end
 end
 
@@ -80,8 +78,8 @@ class Enemy < Creature
     @image = Gosu::Image.new('img/orc-head.png')
   end
 
-  def did_collide_with(obj)
-    puts "enemy collided"
+  def did_collide_with(_obj)
+    puts 'enemy collided'
   end
 
   def try_move(new_x, new_y)

@@ -78,6 +78,7 @@ def gen_enemies
   enemies
 end
 
+# A node holding a physical position, neighbours, and a cost
 class Node
   attr_reader :tile, :x, :y, :parent
   attr_accessor :prev_cost, :own_cost, :total_cost
@@ -112,7 +113,7 @@ class GameWindow < Gosu::Window
     bg = Background.new(@w, @h)
     @tiles = gen_tiles
     @objs = [bg, @player] + @tiles + gen_enemies
-    GameObject::set_objects @objs
+    GameObject.set_objects @objs
   end
 
   def needs_cursor?
@@ -127,12 +128,11 @@ class GameWindow < Gosu::Window
     move_player(1, 0) if id == Gosu::KbRight
     move_player(-1, 0) if id == Gosu::KbLeft
     move_enemies if id == Gosu::KbSpace
-    binding.pry if id == Gosu::KbSpace
+    binding.pry if id == Gosu::KbSpace # DEBUG ENTRY
   end
 
   def move_enemies
     enemies = @objs.find_all { |obj| obj.is_a? Enemy }
-    binding.pry unless enemies
     enemies.each { |enemy| move_enemy(enemy) }
 
     if enemies.count < 3
@@ -155,7 +155,6 @@ class GameWindow < Gosu::Window
     new_x = movement_path[1][0]
     new_y = movement_path[1][1]
     enemy.try_move(new_x, new_y)
-    # binding.pry
   end
 
   def unwrap_movement_path(movement_path)
@@ -180,7 +179,6 @@ class GameWindow < Gosu::Window
     closed_nodes = []
 
     until open_nodes.empty?
-      #binding.pry
       open_nodes.sort! do |a, b|
         b.total_cost <=> a.total_cost
       end
