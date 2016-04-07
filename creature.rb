@@ -29,7 +29,6 @@ class Creature < GameObject
 
       if obj.is_a? Creature
         did_attack(obj)
-        return true
       else
         did_collide_with(obj)
         return false

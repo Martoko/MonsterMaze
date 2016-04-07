@@ -1,8 +1,8 @@
 # A class to paint the background
 class Background
-  def initialize(w, h)
-    @w = w
-    @h = h
+  def initialize(game_window)
+    @w = game_window.width
+    @h = game_window.height
   end
 
   def draw

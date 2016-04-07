@@ -5,6 +5,7 @@ require_relative 'background'
 require_relative 'floating_text'
 require_relative 'endgame_text'
 require_relative 'instructions_overlay'
+require_relative 'gen_level'
 require 'pry'
 
 # IDEA: Sight/visbility like in ADOM
@@ -37,51 +38,7 @@ class Tile < GameObject
   end
 end
 
-Map = [[:W, :W, :W, :W, :W, :W, :W, :W, :W, :W, :W, :W, :W, :W, :W],
-       [:W, :O, :W, :_, :_, :_, :_, :_, :_, :_, :W, :_, :_, :O, :W],
-       [:W, :_, :W, :_, :_, :_, :W, :_, :_, :_, :W, :_, :_, :_, :W],
-       [:W, :_, :W, :_, :_, :_, :W, :_, :_, :_, :_, :_, :_, :W, :W],
-       [:W, :_, :W, :_, :_, :_, :W, :_, :_, :_, :W, :_, :_, :_, :W],
-       [:W, :_, :W, :_, :W, :W, :W, :W, :W, :_, :W, :W, :_, :_, :W],
-       [:W, :_, :_, :P, :_, :_, :_, :_, :_, :_, :W, :W, :W, :_, :W],
-       [:W, :_, :W, :W, :W, :W, :_, :W, :W, :_, :W, :_, :_, :_, :W],
-       [:W, :_, :_, :_, :_, :_, :_, :_, :_, :_, :W, :_, :W, :W, :W],
-       [:W, :_, :_, :_, :_, :_, :W, :_, :W, :W, :W, :_, :_, :O, :W],
-       [:W, :W, :W, :W, :W, :W, :W, :W, :W, :W, :W, :W, :W, :W, :W]].freeze
-def gen_tiles
-  tiles = []
-  Map.each_with_index do |row, y|
-    row.each_with_index do |type_id, x|
-      type = :air if type_id == :P || type_id == :O
-      type = :air if type_id == :_
-      type = :wall if type_id == :W
-      tiles << Tile.new(5 + x * (64 + 5), 5 + y * (64 + 5), type)
-    end
-  end
-  tiles
-end
-
-def gen_player
-  Map.each_with_index do |row, y|
-    row.each_with_index do |type_id, x|
-      return Player.new(5 + x * (64 + 5), 5 + y * (64 + 5)) if type_id == :P
-    end
-  end
-end
-
-def gen_enemies
-  enemies = []
-  Map.each_with_index do |row, y|
-    row.each_with_index do |type_id, x|
-      next unless type_id == :O
-      _type = :orc if type_id == :O
-      enemies << Enemy.new(5 + x * (64 + 5), 5 + y * (64 + 5))
-    end
-  end
-  enemies
-end
-
-# A node holding a physical position, neighbours, and a cost
+# A node holding a physical position, neighbors, and a cost
 class Node
   attr_reader :tile, :x, :y, :parent
   attr_accessor :prev_cost, :own_cost, :total_cost
@@ -112,14 +69,18 @@ class GameWindow < Gosu::Window
     @h = 5 + (69 * h_tiles)
     super @w, @h
     self.caption = 'Monster Maze'
+
+    gen_level_and_init_objs
+    @paused = true
+  end
+
+  def gen_level_and_init_objs
     @player = gen_player
-    bg = Background.new(@w, @h)
+    bg = Background.new(self)
     @tiles = gen_tiles
     @instruct_overlay = InstructionsOverlay.new(self)
     @objs = [bg, @player, @instruct_overlay] + @tiles + gen_enemies
     GameObject.set_objects @objs
-
-    @paused = true
   end
 
   def needs_cursor?
@@ -149,27 +110,34 @@ class GameWindow < Gosu::Window
 
     player_did_move = @player.try_move(new_x, new_y)
 
-    if player_did_move
-      move_enemies
-      @objs.each do |obj|
-        obj.passive_heal if obj.respond_to? :passive_heal
-      end
-    end
+    game_tick if player_did_move
+  end
 
+  def game_tick
+    move_enemies
+    apply_passive_heal
+    check_for_victory
+  end
+
+  def apply_passive_heal
+    @objs.each do |obj|
+      obj.passive_heal if obj.respond_to? :passive_heal
+    end
+  end
+
+  def check_for_victory
+    # Loss
     if @player.health <= 0
       @objs << EndgameText.new(self, :lose)
       @paused = true
     end
 
-    won = true
-    @objs.each do |obj|
-      won = false if obj.is_a? Enemy
-    end
-    if won
-      @objs << EndgameText.new(self, :win)
-      @paused = true
-    end
+    enemy_search = @objs.find { |x| x.is_a? Enemy }
 
+    # Victory
+    return unless enemy_search.nil?
+    @objs << EndgameText.new(self, :win)
+    @paused = true
   end
 
   def move_enemies
@@ -178,7 +146,6 @@ class GameWindow < Gosu::Window
   end
 
   def move_enemy(enemy)
-    return if enemy.x == @player.x && enemy.y == @player.y
     movement_path = a_star([enemy.x, enemy.y], [@player.x, @player.y])
     return unless movement_path # No solution found
     return if movement_path.length > 7 # not close enough to 'spot' the player
@@ -214,24 +181,24 @@ class GameWindow < Gosu::Window
       end
       current_node = open_nodes.pop
 
-      find_tile_neighbours(current_node.tile).each do |neighbour|
-        next if neighbour.type == :wall
+      find_tile_neighbors(current_node.tile).each do |neighbor|
+        next if neighbor.type == :wall
 
-        if neighbour.x == end_pos[0] && neighbour.y == end_pos[1]
-          movement_path = Node.new(neighbour, parent: current_node, start_node: start_node)
+        if neighbor.x == end_pos[0] && neighbor.y == end_pos[1]
+          movement_path = Node.new(neighbor, parent: current_node, start_node: start_node)
           return unwrap_movement_path(movement_path)
         end
 
         should_add = true
         open_nodes.each do |open_node|
-          should_add = false if open_node.x == neighbour.x && open_node.y == neighbour.y
+          should_add = false if open_node.x == neighbor.x && open_node.y == neighbor.y
         end
         closed_nodes.each do |closed_node|
-          should_add = false if closed_node.x == neighbour.x && closed_node.y == neighbour.y
+          should_add = false if closed_node.x == neighbor.x && closed_node.y == neighbor.y
         end
 
 
-        open_nodes << Node.new(neighbour, parent: current_node, start_node: start_node) if should_add
+        open_nodes << Node.new(neighbor, parent: current_node, start_node: start_node) if should_add
       end
 
       closed_nodes << current_node
@@ -240,16 +207,16 @@ class GameWindow < Gosu::Window
     return nil
   end
 
-  def find_tile_neighbours(tile)
-    neighbours = []
+  def find_tile_neighbors(tile)
+    neighbors = []
     @tiles.each do |other_tile|
       next if tile.y == other_tile.y && tile.x == other_tile.x
       if ((tile.x - other_tile.x).abs == 69 && (tile.y - other_tile.y).abs == 0) ||
          ((tile.x - other_tile.x).abs == 0 && (tile.y - other_tile.y).abs == 69)
-        neighbours.push other_tile
+        neighbors.push other_tile
       end
     end
-    neighbours
+    neighbors
   end
 
   def update
