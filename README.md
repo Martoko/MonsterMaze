@@ -8,7 +8,16 @@ Small demonstration of A* in Ruby, using the GOSU graphical library.
 
 ## Building
 
-Building for requires
+Building requires
  - Ruby
  - GOSU
- - Ocra (Windows only)
+ - Ocra (Building for Windows)
+ - Rake (Building for Mac OS X)
+
+#### Windows
+
+Run "winbuild.bat".
+
+#### Mac OS X
+
+Run "rake build_OS_X" to build for OS X.
