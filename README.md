@@ -8,7 +8,10 @@ Small demonstration of A* in Ruby, using the GOSU graphical library.
 
 ## Building
 
-Building requires
+Building a standalone executable file is possible for Windows and Mac OS X.
+Linux users are expected to run the ruby files as is.
+
+Dependencies
  - Ruby
  - GOSU
  - Ocra (Building for Windows)
