@@ -8,7 +8,7 @@ Small demonstration of A* in Ruby, using the GOSU graphical library.
 
 ## Building
 
-Building for windows requires
+Building for requires
  - Ruby
  - GOSU
  - Ocra (Windows only)
