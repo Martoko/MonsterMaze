@@ -6,7 +6,7 @@ require_relative 'floating_text'
 require_relative 'endgame_text'
 require_relative 'instructions_overlay'
 require_relative 'gen_level'
-require 'pry'
+# require 'pry'
 
 # IDEA: Sight/visbility like in ADOM
 # IDEA: Sight/visibility determined by perception
