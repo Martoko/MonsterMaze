@@ -20,4 +20,4 @@ Run "winbuild.bat".
 
 #### Mac OS X
 
-Run "rake build_OS_X" to build for OS X.
+Run "rake build_osx" to build for OS X.

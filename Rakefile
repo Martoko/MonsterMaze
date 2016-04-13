@@ -8,7 +8,7 @@ MAC_WRAPPER = Rake::FileList.new('wrappers/Ruby.app/**') do |fl|
   fl.exclude('Contents/Resources/main.rb')
 end
 
-task :build_OS_X do
+task :build_osx do
   build_dir = File.join('bin', 'OS_X')
   app_dir = File.join(build_dir, 'MonsterMaze.app')
   app_src_dir = File.join(app_dir, 'Contents', 'Resources')
@@ -18,12 +18,11 @@ task :build_OS_X do
 
   infoplist = File.read(infoplist_filename)
   new_infoplist_text = infoplist.gsub(/com.example.Ruby/, 'com.marotko.MonsterMaze')
-  # To write changes to the file, use:
   File.open(infoplist_filename, 'w') { |file| file.puts new_infoplist_text }
 
   FileUtils.cp_r SOURCE, app_src_dir
 end
 
-task :build_Windows do
+task :build_win do
   puts 'TODO'
 end
