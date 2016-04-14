@@ -21,7 +21,7 @@ Build dependencies
 
 #### Windows
 
-Run "rake build_win" to build for OS X.
+Run "rake build_win" to build for Windows.
 
 #### Mac OS X
 
