@@ -9,18 +9,24 @@ Small demonstration of A* in Ruby, using the GOSU graphical library.
 ## Building
 
 Building a standalone executable file is possible for Windows and Mac OS X.
-Linux users are expected to run the ruby files as is.
+Linux users are expected to run the ruby outputted by "rake build_ruby".
 
-Dependencies
+Runtime dependencies
  - Ruby
  - GOSU
- - Ocra (Building for Windows)
- - Rake (Building for Mac OS X)
+
+Build dependencies
+ - Rake
+ - Ocra (Building for Windows only)
 
 #### Windows
 
-Run "winbuild.bat".
+Run "rake build_win" to build for OS X.
 
 #### Mac OS X
 
 Run "rake build_osx" to build for OS X.
+
+#### Linux
+
+Run "rake build_ruby" to gather the source code and images in "bin/ruby".
