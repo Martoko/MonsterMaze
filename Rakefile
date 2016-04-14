@@ -27,7 +27,7 @@ module OS
   end
 end
 
-task default: [:build_osx, :build_win]
+task default: [:build_osx, :build_win, :build_src]
 
 SOURCE = Rake::FileList.new('src/*.rb', 'img')
 
@@ -51,18 +51,19 @@ task :build_osx do
 end
 
 task :build_win do
-  unless OS.windows?
+  if OS.windows?
+    build_dir = File.join('bin', 'win' + OS.arch.to_s)
+    mkdir_p build_dir
+
+    FileUtils.cp_r Rake::FileList.new('img'), build_dir
+    exe_path = File.join('bin', 'win' + OS.arch.to_s, 'MonsterMaze.exe')
+    puts %x(ocra --windows --output #{exe_path} #{File.join 'src', 'main.rb'})
+  else
     puts 'Skipping windows build since we are not on a windows platform'
   end
-  build_dir = File.join('bin', 'win' + OS.arch.to_s)
-  mkdir_p build_dir
-
-  FileUtils.cp_r Rake::FileList.new('img'), build_dir
-  exe_path = File.join('bin', 'win' + OS.arch.to_s, 'MonsterMaze.exe')
-  puts %x(ocra --windows --output #{exe_path} #{File.join 'src', 'main.rb'})
 end
 
-task :build_ruby do
+task :build_src do
   build_dir = File.join('bin', 'ruby')
   mkdir_p build_dir
 
